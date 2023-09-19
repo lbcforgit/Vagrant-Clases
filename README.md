@@ -1,2 +1,2 @@
 # Vagrant-Clases
-Proyectos de Vagrant para utilizar en clases
+**Proyectos de Vagrant para utilizar en clases**
