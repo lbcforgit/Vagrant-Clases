@@ -1,0 +1,113 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  #SERVIDOR DHCP------------------------------------
+  (1..2).each do |i|
+    config.vm.define "ubuntu-server-dhcp#{i}" do |dh|
+      dh.vm.box = "bento/ubuntu-22.04"
+      dh.vm.synced_folder ".", "/vagrant", disabled: true
+      #dh.disksize.size = "25GB"
+      dh.vm.hostname = "dhcp-ub-#{i}"
+    
+      dh.vm.provider "virtualbox" do |vb|
+        vb.gui = true
+        vb.name = "ubuntu22-DHCP-server-#{i}"
+        vb.memory = "512"
+        vb.cpus = "1"    
+        vb.customize ["modifyvm", :id, "--groups", "/SRI-1-DHCP"] 
+      end
+      dh.vm.provider "vmware_desktop" do |v|
+        v.gui = true
+        v.linked_clone = false
+        v.vmx["displayname"] = "ubuntu22-DHCP-server-#{i}"
+        #v.vmx["memsize"] = "512"
+        #v.vmx["numvcpus"] = "1"
+        v.vmx["vmx.custom.machineGroup"] =  "SRI-1-DHCP"
+      end
+
+      dh.vm.provision "shell", path: "./scripts/0-banner.sh"
+      dh.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+      dh.vm.provision "shell", path: "./scripts/99-script-cierre.sh"
+    end
+  end
+  # SERVIDOR GENÉRICO (actúa como cliente del DHCP)------------------
+  (1..2) each do |i|
+    config.vm.define "ubuntu-server-generico#{i}" do |us|
+      us.vm.box = "bento/ubuntu-22.04"
+      us.vm.synced_folder ".", "/vagrant", disabled: true
+      #us.disksize.size = "25GB"
+      us.vm.hostname = "ub-server-gen-#{i}"
+      
+      us.vm.provider "virtualbox" do |vb|
+        vb.gui = true
+        vb.name = "ubuntu22-server-generico#{i}"
+        vb.memory = "512"
+        vb.cpus = "1"    
+        vb.customize ["modifyvm", :id, "--groups", "/SRI-1-DHCP"] 
+      end
+      us.vm.provider "vmware_desktop" do |v|
+        v.gui = true
+        v.linked_clone = false
+        v.vmx["displayname"] = "ubuntu22-server-generico#{i}"
+        #v.vmx["memsize"] = "512"
+        #v.vmx["numvcpus"] = "1"
+        v.vmx["vmx.custom.machineGroup"] =  "SRI-1-DHCP"
+      end
+      us.vm.provision "shell", path: "./scripts/0-banner-ub-server.sh"
+      us.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+      us.vm.provision "shell", path: "./scripts/99-script-cierre.sh"
+    end
+  end
+# CLIENTE UBUNTU DESKTOP --------------------------------------------
+  config.vm.define "ubuntu-desktop-fasmat" do |ud|
+    ud.vm.box = "fasmat/ubuntu2204-desktop"
+    ud.vm.synced_folder ".", "/vagrant", disabled: true
+    #ud.disksize.size = "25GB"
+    ud.vm.hostname = "ubdesk"
+    
+    ud.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.name = "ubuntu22-desktop-fasmat"
+      vb.memory = "2048"
+      vb.cpus = "2"    
+      vb.customize ["modifyvm", :id, "--groups", "/SRI-1-DHCP"] 
+    end
+    ud.vm.provider "vmware_desktop" do |v|
+      v.gui = true
+      v.linked_clone = false
+      v.vmx["displayname"] = "ubuntu22-server"
+      #v.vmx["memsize"] = "2048"
+      #v.vmx["numvcpus"] = "2"
+      v.vmx["vmx.custom.machineGroup"] =  "SRI-1-DHCP"
+    end
+
+    ud.vm.provision "shell", path: "./scripts/0-banner-ub-desktop.sh"
+    ud.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+    ud.vm.provision "shell", path: "./scripts/99-script-cierre.sh"    
+  end
+# CLIENTE WINDOWS 11 -----------------------------------------------
+  config.vm.define "windows11-sri" do |wi| 
+    wi.vm.box = "gusztavvargadr/windows-11" 
+    wi.vm.hostname = "windows11-sri" 
+
+    wi.vm.synced_folder ".", "/vagrant", disabled: true 
+    wi.vm.provider "virtualbox" do |vb| 
+      vb.gui = true 
+      vb.memory = "4096" 
+      vb.name = "windows11-sri" 
+      vb.cpus = "2" 
+      vb.customize ["modifyvm", :id, "--groups", "/SRI-1-DHCP"] 
+    end 
+    wi.vm.provider "vmware_desktop" do |v|
+      v.gui = true
+      v.linked_clone = false
+      v.vmx["displayname"] = "Windows11-lab"
+      #v.vmx["memsize"] = "4096"
+      #v.vmx["numvcpus"] = "2"
+      v.vmx["vmx.custom.machineGroup"] =  "SRI-1-DHCP"
+    end
+    wi.vm.provision "shell", inline: "Stop-Computer -Force"
+  end 
+
+end
