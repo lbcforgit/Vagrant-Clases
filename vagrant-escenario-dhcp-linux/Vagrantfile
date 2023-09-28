@@ -76,7 +76,7 @@ Vagrant.configure("2") do |config|
     ud.vm.provider "vmware_desktop" do |v|
       v.gui = true
       v.linked_clone = false
-      v.vmx["displayname"] = "ubuntu22-server"
+      v.vmx["displayname"] = "ubuntu22-desktop-fasmat"
       #v.vmx["memsize"] = "2048"
       #v.vmx["numvcpus"] = "2"
       v.vmx["vmx.custom.machineGroup"] =  "SRI-1-DHCP"
