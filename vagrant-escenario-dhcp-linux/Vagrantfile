@@ -5,7 +5,7 @@ Vagrant.configure("2") do |config|
   #SERVIDOR DHCP------------------------------------
   (1..2).each do |i|
     config.vm.define "ubuntu-server-dhcp#{i}" do |dh|
-      dh.vm.box = "bento/ubuntu-22.04"
+      dh.vm.box = "bento/ubuntu-20.04" #por ahora bento-ubuntu 22.04 da problemas al instalar software
       dh.vm.synced_folder ".", "/vagrant", disabled: true
       #dh.disksize.size = "25GB"
       dh.vm.hostname = "dhcp-ub-#{i}"
@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
   # SERVIDOR GENÉRICO (actúa como cliente del DHCP)------------------
   (1..2) each do |i|
     config.vm.define "ubuntu-server-generico#{i}" do |us|
-      us.vm.box = "bento/ubuntu-22.04"
+      us.vm.box = "bento/ubuntu-20.04"  #por ahora bento-ubuntu 22.04 da problemas al instalar software
       us.vm.synced_folder ".", "/vagrant", disabled: true
       #us.disksize.size = "25GB"
       us.vm.hostname = "ub-server-gen-#{i}"
