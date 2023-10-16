@@ -1,0 +1,190 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#En VMWare no indicar RAM ni CPU porque da fallo (kernel panic)
+
+Vagrant.configure("2") do |config|
+  #SERVIDOR DHCP------------------------------------
+    config.vm.define "dhcp" do |dh|
+        #dh.vm.box = "bento/ubuntu-22.04"  da fallos
+        #dh.vm.box = "ubuntu/focal64" 
+        dh.vm.box = "ubuntu/jammy64"
+      
+        dh.vm.synced_folder ".", "/vagrant", disabled: true
+        #dh.disksize.size = "25GB"
+        dh.vm.hostname = "dhcp"
+      
+        dh.vm.provider "virtualbox" do |vb|
+          vb.gui = true
+          vb.name = "dhcp"
+          vb.memory = "1024"
+          vb.cpus = "1"    
+          vb.customize ["modifyvm", :id, "--groups", "/SRI-1-dns"] 
+        end
+        dh.vm.provider "vmware_desktop" do |v|
+          v.gui = true
+          v.linked_clone = false
+          v.clone_directory = "/Volumes/M2ExternoLu/VMs/VMware/SRI-DNS"
+          v.vmx["displayname"] = "dhcp"
+          #v.vmx["memsize"] = "512"
+          #v.vmx["numvcpus"] = "1"
+          v.vmx["vmx.custom.machineGroup"] =  "SRI-1-dns"
+        end
+  
+        dh.vm.provision "shell", path: "./scripts/0-banner.sh"
+        dh.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+        dh.vm.provision "shell", path: "./scripts/10-instalar-dhcp-server.sh"
+        dh.vm.provision "shell", path: "./scripts/99-script-cierre.sh"
+    end
+  
+  #SERVIDOR DNS ------------------------------------
+  (1..2).each do |i|
+    config.vm.define "ubuntu-server-dns#{i}" do |ds|
+      #ds.vm.box = "bento/ubuntu-22.04"  da fallos
+      ds.vm.box = "ubuntu/jammy64"
+      ds.vm.synced_folder ".", "/vagrant", disabled: true
+      #dh.disksize.size = "25GB"
+      ds.vm.hostname = "dns-ub-#{i}"
+    
+      ds.vm.provider "virtualbox" do |vb|
+        vb.gui = true
+        vb.name = "ubuntu22-dns-server-#{i}"
+        vb.memory = "512"
+        vb.cpus = "1"    
+        vb.customize ["modifyvm", :id, "--groups", "/SRI-1-dns"] 
+      end
+      ds.vm.provider "vmware_desktop" do |v|
+        v.gui = true
+        v.linked_clone = false
+        v.clone_directory = "/Volumes/M2ExternoLu/VMs/VMware/SRI-DNS"
+        v.vmx["displayname"] = "ubuntu22-dns-server-#{i}"
+        #v.vmx["memsize"] = "512"
+        #v.vmx["numvcpus"] = "1"
+        v.vmx["vmx.custom.machineGroup"] =  "SRI-1-dns"
+      end
+
+      ds.vm.provision "shell", path: "./scripts/0-banner.sh"
+      ds.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+      ds.vm.provision "shell", path: "./scripts/99-script-cierre.sh"
+    end
+  end
+  # SERVIDOR WWW (para simular dominio y subdominio)------------------
+  (1..2).each do |i|
+    config.vm.define "ubuntu-server-www#{i}" do |us|
+      #dh.vm.box = "bento/ubuntu-22.04"  da fallos
+      us.vm.box = "ubuntu/jammy64"
+      us.vm.synced_folder ".", "/vagrant", disabled: true
+      #us.disksize.size = "25GB"
+      us.vm.hostname = "ub-server-gen-#{i}"
+      
+      us.vm.provider "virtualbox" do |vb|
+        vb.gui = true
+        vb.name = "ubuntu22-server-www#{i}"
+        vb.memory = "512"
+        vb.cpus = "1"    
+        vb.customize ["modifyvm", :id, "--groups", "/SRI-1-dns"] 
+      end
+      us.vm.provider "vmware_desktop" do |v|
+        v.gui = true
+        v.linked_clone = false
+        v.clone_directory = "/Volumes/M2ExternoLu/VMs/VMware/SRI-DNS"
+        v.vmx["displayname"] = "ubuntu22-server-www#{i}"
+        #v.vmx["memsize"] = "512"
+        #v.vmx["numvcpus"] = "1"
+        v.vmx["vmx.custom.machineGroup"] =  "SRI-1-dns"
+      end
+      us.vm.provision "shell", path: "./scripts/0-banner-ub-server.sh"
+      us.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+      us.vm.provision "shell", path: "./scripts/11-instalar-www.sh"
+      us.vm.provision "shell", path: "./scripts/99-script-cierre.sh"
+    end
+  end
+
+  # SERVIDOR mail (para simular MX )------------------
+=begin   
+  (1..2).each do |i|
+    config.vm.define "ubuntu-server-mail#{i}" do |us|
+      #dh.vm.box = "bento/ubuntu-22.04"  da fallos
+      dh.vm.box = "ubuntu/jammy64"
+      us.vm.synced_folder ".", "/vagrant", disabled: true
+      #us.disksize.size = "25GB"
+      us.vm.hostname = "ub-server-mail-#{i}"
+      
+      us.vm.provider "virtualbox" do |vb|
+        vb.gui = true
+        vb.name = "ubuntu22-server-mail#{i}"
+        vb.memory = "512"
+        vb.cpus = "1"    
+        vb.customize ["modifyvm", :id, "--groups", "/SRI-1-dns"] 
+      end
+      us.vm.provider "vmware_desktop" do |v|
+        v.gui = true
+        v.linked_clone = false
+        v.clone_directory = "/Volumes/M2ExternoLu/VMs/VMware/SRI-DNS"
+        v.vmx["displayname"] = "ubuntu22-server-mail#{i}"
+        #v.vmx["memsize"] = "512"
+        #v.vmx["numvcpus"] = "1"
+        v.vmx["vmx.custom.machineGroup"] =  "SRI-1-dns"
+      end
+      us.vm.provision "shell", path: "./scripts/0-banner-ub-server.sh"
+      us.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+      us.vm.provision "shell", path: "./scripts/99-script-cierre.sh"
+    end
+  end
+=end
+# CLIENTE UBUNTU DESKTOP --------------------------------------------
+=begin 
+  config.vm.define "ubuntu-desktop-fasmat" do |ud|
+    ud.vm.box = "fasmat/ubuntu2204-desktop"
+    ud.vm.synced_folder ".", "/vagrant", disabled: true
+    #ud.disksize.size = "25GB"
+    ud.vm.hostname = "ubdesk"
+    
+   ud.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.name = "ubuntu22-desktop-fasmat"
+      vb.memory = "2048"
+      vb.cpus = "2"    
+      vb.customize ["modifyvm", :id, "--groups", "/SRI-1-dns"] 
+    end
+    ud.vm.provider "vmware_desktop" do |v|
+      v.gui = true
+      v.linked_clone = false
+      v.clone_directory = "/Volumes/M2ExternoLu/VMs/VMware/SRI-DNS"
+      v.vmx["displayname"] = "ubuntu22-desktop-fasmat"
+      #v.vmx["memsize"] = "2048"
+      #v.vmx["numvcpus"] = "2"
+      v.vmx["vmx.custom.machineGroup"] =  "SRI-1-dns"
+    end
+
+    ud.vm.provision "shell", path: "./scripts/0-banner-ub-desktop.sh"
+    ud.vm.provision "shell", path: "./scripts/1-script-inicial.sh"    
+    ud.vm.provision "shell", path: "./scripts/99-script-cierre.sh"    
+  end
+=end
+# CLIENTE WINDOWS 11 -----------------------------------------------
+=begin 
+  config.vm.define "windows11-sri" do |wi| 
+    wi.vm.box = "gusztavvargadr/windows-11" 
+    wi.vm.hostname = "windows11-sri" 
+
+    wi.vm.synced_folder ".", "/vagrant", disabled: true 
+    wi.vm.provider "virtualbox" do |vb| 
+      vb.gui = true 
+      vb.memory = "4096" 
+      vb.name = "windows11-sri" 
+      vb.cpus = "2" 
+      vb.customize ["modifyvm", :id, "--groups", "/SRI-1-dns"] 
+    end 
+    wi.vm.provider "vmware_desktop" do |v|
+      v.gui = true
+      v.linked_clone = false
+       v.clone_directory = "/Volumes/M2ExternoLu/VMs/VMware/SRI-DNS"
+      v.vmx["displayname"] = "Windows11-lab"
+      #v.vmx["memsize"] = "4096"
+      #v.vmx["numvcpus"] = "2"
+      v.vmx["vmx.custom.machineGroup"] =  "SRI-1-dns"
+    end
+    wi.vm.provision "shell", inline: "Stop-Computer -Force"
+  end 
+=end
+end
