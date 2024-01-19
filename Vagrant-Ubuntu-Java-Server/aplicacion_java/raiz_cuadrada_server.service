@@ -1,0 +1,15 @@
+[Unit]
+#obligatorios
+Description=Servidor Java Raices Cuadradas
+
+[Service]
+#obligatorios
+#redirijimos la salida al dispositivo de descarte. Lo ideal sería a un fichero de registro
+ExecStart=/usr/bin/java -jar /usr/sbin/psp_UD3_TCP_raizcuadrada_server.jar > /dev/null 2>&1
+Restart=always
+
+[Install]
+#obligatorios
+WantedBy=multi-user.target
+#opcionales
+Alias=cuadradizador.service

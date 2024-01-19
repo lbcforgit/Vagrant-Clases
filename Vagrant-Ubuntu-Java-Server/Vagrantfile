@@ -1,0 +1,49 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  
+  config.vm.define "ubuntu-server" do |us|
+    ############ SISTEMA #############################
+    us.vm.box = "bento/ubuntu-22.04"
+    #us.vm.box = "ubuntu/jammy64"
+    us.vm.synced_folder ".", "/vagrant", disabled: true
+    #us.vm.synced_folder "./compartido", "/vagrant"
+    #us.disksize.size = "25GB"
+    us.vm.hostname = "ub-server-java-app"
+    us.vm.network "forwarded_port", guest: 6666, host: 6666
+    
+    ############ PROVIDERS  ###########################
+    us.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.name = "ubuntu22-server-java-app"
+      #vb.memory = "512"
+      #vb.cpus = "1"     
+    end
+    
+    config.vm.provider "vmware_desktop" do |v|
+      v.gui = true
+      v.linked_clone = false
+      v.vmx["displayname"] = "ubuntu22-server-java-app"
+      #v.clone_directory = "/ruta/donde/se/crea/vm"
+      #v.vmx["memsize"] = "512" #da error con menos de 2GB y 2 CPUs en Vmware
+      #v.vmx["numvcpus"] = "1"
+      #---- EXSI ----#
+      #v.vmx["remote"] = true
+      #v.vmx["host"] = "esxi_server_address"
+      #v.vmx["user"] = "esxi_username" # Replace with ESXi username 
+      #v.vmx["password"] = "esxi_password" # Replace ESXi password
+      #--------------#
+    end
+    ############# PROVISIONING #######################
+    us.vm.provision "shell", path: "./scripts/0-banner-ub-server.sh"
+    us.vm.provision "shell", path: "./scripts/1-script-inicial.sh"
+      
+    us.vm.provision "app", type: "file", source: "./aplicacion_java/psp_UD3_TCP_raizcuadrada_server.jar", destination: "psp_UD3_TCP_raizcuadrada_server.jar"
+    us.vm.provision "unidad", type: "file", source: "./aplicacion_java/raiz_cuadrada_server.service", destination: "raiz_cuadrada_server.service"
+    us.vm.provision "shell", path: "./scripts/2-instalacion-servicio.sh"
+    
+    us.vm.provision "shell", path: "./scripts/99-script-cierre.sh"
+    
+  end
+end

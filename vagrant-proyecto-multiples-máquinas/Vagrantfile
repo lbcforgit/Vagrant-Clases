@@ -1,0 +1,61 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+
+Vagrant.configure("2") do |config|
+  #MV1 - Ubuntu -----------------------------------------
+  config.vm.define "ubuntu22-sri" do |ub|
+    ub.vm.box = "ubuntu/jammy64"
+    ub.vm.hostname = "ubuntu22-sri"
+    ub.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+    ub.vm.synced_folder ".", "/vagrant", disabled: true    
+    ub.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = "1024"
+      vb.name = "ubuntu22-sri"
+      vb.cpus = "1"
+      vb.customize ["modifyvm", :id, "--groups", "/pruebasSRI"]
+    end
+    ub.vm.provision "shell", path: "script-ubuntu.sh" 
+  end
+  #MV2 - Debian ----------------------------------------
+  config.vm.define "debian12-sri" do |de|
+    de.vm.box = "debian/bookworm64"
+    de.vm.hostname = "debian12-sri"
+    de.vm.network "private_network", ip: "192.168.2.11"
+    de.vm.synced_folder ".", "/vagrant", disabled: true
+    de.vm.provider "virtualbox" do |vb|      
+      vb.gui = true
+      vb.memory = "512"
+      vb.name = "debian12-sri"
+      vb.cpus = "1"
+      vb.customize ["modifyvm", :id, "--groups", "/pruebasSRI"]
+    end
+  end
+  #MW3 - Windows 11 -------------------------------------
+  config.vm.define "windows11-sri" do |wi|
+    #wi.vm.box = "gusztavvargadr/windows-11"
+    wi.vm.box = "gusztavvargadr/windows-11-22h2-enterprise"
+    #ESPECÍFICO WINDOWS para evitar que dé fallo mientras comienza
+    #wi.winrm.max_tries = 300 # default is 20
+    #wi.windows.halt_timeout = 120
+    #wi.winrm.retry_limit = 30
+    #wi.winrm.retry_delay = 10 #seconds. 
+    #-------
+    wi.vm.hostname = "windows11-sri"
+    wi.vm.network "private_network", ip: "192.168.2.10"
+    wi.vm.synced_folder ".", "/vagrant", disabled: true
+    wi.vm.provider "virtualbox" do |vb|      
+      vb.gui = true
+      vb.memory = "4096"
+      vb.name = "windows11-sri"
+      vb.cpus = "2"
+      vb.customize ["modifyvm", :id, "--groups", "/pruebasSRI"]
+    end
+  end
+  
+end

@@ -1,0 +1,3 @@
+puerto = 6666       
+ipEscucha = por todas las interfaces de red que tenga la MV
+cola = 3
